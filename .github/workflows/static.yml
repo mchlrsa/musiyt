@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MusiYT - YouTube Music</title>
+<style>
+  body {
+    margin:0; font-family: 'Arial', sans-serif; background:#121212; color:#fff;
+  }
+  header {
+    padding:20px; text-align:center; background:#1DB954; font-size:24px; font-weight:bold;
+  }
+  #search-container {
+    display:flex; justify-content:center; margin:20px;
+  }
+  #search-input {
+    width:300px; padding:10px; border:none; border-radius:5px;
+  }
+  #search-btn {
+    padding:10px; margin-left:10px; border:none; border-radius:5px; background:#1DB954; color:white; cursor:pointer;
+  }
+  #results {
+    display:grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap:15px; padding:20px;
+  }
+  .video-card {
+    background:#1e1e1e; border-radius:8px; padding:10px; cursor:pointer;
+    transition: transform 0.2s;
+  }
+  .video-card:hover { transform: scale(1.05); }
+  .video-card img { width:100%; border-radius:5px; }
+  .video-title { margin-top:10px; font-size:16px; }
+  #player-container { text-align:center; padding:20px; }
+</style>
+</head>
+<body>
+
+<header>MusiYT 🎵</header>
+
+<div id="search-container">
+  <input type="text" id="search-input" placeholder="Search songs...">
+  <button id="search-btn">Search</button>
+</div>
+
+<div id="results"></div>
+
+<div id="player-container">
+  <div id="player"></div>
+</div>
+
+<script>
+const API_KEY = 'YOUR_YOUTUBE_API_KEY';
+const searchBtn = document.getElementById('search-btn');
+const searchInput = document.getElementById('search-input');
+const resultsDiv = document.getElementById('results');
+let player;
+
+searchBtn.addEventListener('click', () => {
+  const query = searchInput.value.trim();
+  if(query) searchYouTube(query);
+});
+
+function searchYouTube(query) {
+  resultsDiv.innerHTML = 'Loading...';
+  fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(query)}&maxResults=12&key=${API_KEY}`)
+    .then(res => res.json())
+    .then(data => {
+      resultsDiv.innerHTML = '';
+      data.items.forEach(item => {
+        const videoCard = document.createElement('div');
+        videoCard.className = 'video-card';
+        videoCard.innerHTML = `
+          <img src="${item.snippet.thumbnails.medium.url}" alt="${item.snippet.title}">
+          <div class="video-title">${item.snippet.title}</div>
+        `;
+        videoCard.onclick = () => playVideo(item.id.videoId);
+        resultsDiv.appendChild(videoCard);
+      });
+    });
+}
+
+function playVideo(videoId) {
+  if(player) player.destroy();
+  player = new YT.Player('player', {
+    height: '360',
+    width: '640',
+    videoId: videoId,
+    playerVars: { autoplay: 1 },
+  });
+}
+
+// Load YouTube IFrame API
+let tag = document.createElement('script');
+tag.src = "https://www.youtube.com/iframe_api";
+let firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+</script>
+
+</body>
+</html>
